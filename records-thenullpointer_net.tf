@@ -23,11 +23,11 @@ moved {
 
 resource "cloudflare_record" "thenullpointer_net_tunnel_refs" {
   for_each = {
-    for i, ref in ["argocd", "calibre", "gts", "homeassistant", "miniflux", "plexrequests"] : ref => true
+    for i, ref in ["argocd", "argocd-dev", "calibre", "gts", "homeassistant", "miniflux", "plexrequests"] : ref => true
   }
   zone_id = var.cloudflare_zoneid_thenullpointer_net
   name    = each.key
-  comment = each.key == "argocd" ? "Webhook Only" : null
+  comment = each.key == "argocd" || each.key == "argocd-dev" ? "Webhook Only" : null
   proxied = true
   type    = "CNAME"
 }
