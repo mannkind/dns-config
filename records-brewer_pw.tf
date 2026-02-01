@@ -23,7 +23,7 @@ resource "cloudflare_record" "brewer_pw_domainkey" {
   name    = "${each.key}._domainkey"
   proxied = false
   type    = "CNAME"
-  value   = "${each.key}.brewer.pw.dkim.fmhosted.com"
+  content = "${each.key}.brewer.pw.dkim.fmhosted.com"
 }
 
 resource "cloudflare_record" "brewer_pw_mx10" {
@@ -31,7 +31,7 @@ resource "cloudflare_record" "brewer_pw_mx10" {
   name     = "brewer.pw"
   proxied  = false
   type     = "MX"
-  value    = "in1-smtp.messagingengine.com"
+  content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
@@ -40,7 +40,7 @@ resource "cloudflare_record" "brewer_pw_mx20" {
   name     = "brewer.pw"
   proxied  = false
   type     = "MX"
-  value    = "in2-smtp.messagingengine.com"
+  content  = "in2-smtp.messagingengine.com"
   priority = 20
 }
 
@@ -49,5 +49,5 @@ resource "cloudflare_record" "brewer_pw_spf" {
   name    = "brewer.pw"
   proxied = false
   type    = "TXT"
-  value   = "v=spf1 include:spf.messagingengine.com ?all"
+  content = "v=spf1 include:spf.messagingengine.com ?all"
 }

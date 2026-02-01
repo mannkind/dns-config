@@ -6,5 +6,5 @@ resource "cloudflare_record" "ismycatavegetarian_com_website" {
   name    = each.key
   proxied = true
   type    = "CNAME"
-  value   = "ismycatavegetarian-com.pages.dev"
+  content = "ismycatavegetarian-com.pages.dev"
 }

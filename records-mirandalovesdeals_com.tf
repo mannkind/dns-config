@@ -6,5 +6,5 @@ resource "cloudflare_record" "mirandalovesdeals_com_website" {
   name    = each.key
   proxied = true
   type    = "CNAME"
-  value   = "mirandalovesdeals-com.pages.dev"
+  content = "mirandalovesdeals-com.pages.dev"
 }

@@ -6,21 +6,22 @@ resource "cloudflare_record" "thenullpointer_net_home_dyndns" {
   name    = "home"
   proxied = false
   type    = each.key
+  content = each.key == "A" ? "127.0.0.1" : "::1"
   lifecycle {
-    ignore_changes = [value]
+    ignore_changes = [content]
   }
 }
 
 resource "cloudflare_record" "thenullpointer_net_tunnel_refs" {
   for_each = {
-    for i, ref in ["argocd", "calibre", "gts", "homeassistant", "miniflux", "plexrequests"] : ref => true
+    for i, ref in ["auth", "argocd", "calibre", "homeassistant", "llm", "miniflux", "plexrequests"] : ref => true
   }
   zone_id = var.cloudflare_zoneid_thenullpointer_net
   name    = each.key
   comment = each.key == "argocd" ? "Webhook Only" : null
   proxied = true
   type    = "CNAME"
-  value   = "tunnel.thenullpointer.net"
+  content = "tunnel.thenullpointer.net"
 }
 
 resource "cloudflare_record" "thenullpointer_net_tunnel_dev_refs" {
@@ -32,7 +33,7 @@ resource "cloudflare_record" "thenullpointer_net_tunnel_dev_refs" {
   comment = each.key == "argocd-dev" ? "Webhook Only" : null
   proxied = true
   type    = "CNAME"
-  value   = "tunnel-dev.thenullpointer.net"
+  content = "tunnel-dev.thenullpointer.net"
 }
 
 
@@ -53,14 +54,6 @@ resource "cloudflare_record" "thenullpointer_net_caa" {
   }
 }
 
-resource "cloudflare_record" "thenullpointer_net_wireguard" {
-  zone_id = var.cloudflare_zoneid_thenullpointer_net
-  name    = "wireguard"
-  proxied = false
-  type    = "CNAME"
-  value   = "home.thenullpointer.net"
-}
-
 resource "cloudflare_record" "thenullpointer_net_domainkey" {
   for_each = {
     for i, type in ["fm1", "fm2", "fm3"] : type => true
@@ -69,7 +62,7 @@ resource "cloudflare_record" "thenullpointer_net_domainkey" {
   name    = "${each.key}._domainkey"
   proxied = false
   type    = "CNAME"
-  value   = "${each.key}.thenullpointer.net.dkim.fmhosted.com"
+  content = "${each.key}.thenullpointer.net.dkim.fmhosted.com"
 }
 
 resource "cloudflare_record" "thenullpointer_net_tunnel" {
@@ -77,8 +70,9 @@ resource "cloudflare_record" "thenullpointer_net_tunnel" {
   name    = "tunnel"
   proxied = true
   type    = "CNAME"
+  content = "placeholder.invalid"
   lifecycle {
-    ignore_changes = [value]
+    ignore_changes = [content]
   }
 }
 
@@ -87,8 +81,9 @@ resource "cloudflare_record" "thenullpointer_net_tunnel_dev" {
   name    = "tunnel-dev"
   proxied = true
   type    = "CNAME"
+  content = "placeholder.invalid"
   lifecycle {
-    ignore_changes = [value]
+    ignore_changes = [content]
   }
 }
 
@@ -100,7 +95,7 @@ resource "cloudflare_record" "thenullpointer_net_website" {
   name    = each.key
   proxied = true
   type    = "CNAME"
-  value   = "thenullpointer-net.pages.dev"
+  content = "thenullpointer-net.pages.dev"
 }
 
 resource "cloudflare_record" "thenullpointer_net_mx10" {
@@ -108,7 +103,7 @@ resource "cloudflare_record" "thenullpointer_net_mx10" {
   name     = "thenullpointer.net"
   proxied  = false
   type     = "MX"
-  value    = "in1-smtp.messagingengine.com"
+  content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
@@ -117,7 +112,7 @@ resource "cloudflare_record" "thenullpointer_net_mx20" {
   name     = "thenullpointer.net"
   proxied  = false
   type     = "MX"
-  value    = "in2-smtp.messagingengine.com"
+  content  = "in2-smtp.messagingengine.com"
   priority = 20
 }
 
@@ -126,5 +121,5 @@ resource "cloudflare_record" "thenullpointer_net_spf" {
   name    = "thenullpointer.net"
   proxied = false
   type    = "TXT"
-  value   = "v=spf1 include:spf.messagingengine.com ?all"
+  content = "v=spf1 include:spf.messagingengine.com ?all"
 }

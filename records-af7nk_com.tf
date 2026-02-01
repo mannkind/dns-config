@@ -23,7 +23,7 @@ resource "cloudflare_record" "af7nk_com_domainkey" {
   name    = "${each.key}._domainkey"
   proxied = false
   type    = "CNAME"
-  value   = "${each.key}.af7nk.com.dkim.fmhosted.com"
+  content = "${each.key}.af7nk.com.dkim.fmhosted.com"
 }
 
 resource "cloudflare_record" "af7nk_com_mx10" {
@@ -31,7 +31,7 @@ resource "cloudflare_record" "af7nk_com_mx10" {
   name     = "af7nk.com"
   proxied  = false
   type     = "MX"
-  value    = "in1-smtp.messagingengine.com"
+  content  = "in1-smtp.messagingengine.com"
   priority = 10
 }
 
@@ -40,7 +40,7 @@ resource "cloudflare_record" "af7nk_com_mx20" {
   name     = "af7nk.com"
   proxied  = false
   type     = "MX"
-  value    = "in2-smtp.messagingengine.com"
+  content  = "in2-smtp.messagingengine.com"
   priority = 20
 }
 
@@ -49,7 +49,7 @@ resource "cloudflare_record" "af7nk_com_spf" {
   name    = "af7nk.com"
   proxied = false
   type    = "TXT"
-  value   = "v=spf1 include:spf.messagingengine.com ?all"
+  content = "v=spf1 include:spf.messagingengine.com ?all"
 }
 
 resource "cloudflare_record" "af7nk_com_website" {
@@ -60,5 +60,5 @@ resource "cloudflare_record" "af7nk_com_website" {
   name    = each.key
   proxied = true
   type    = "CNAME"
-  value   = "af7nk-com.pages.dev"
+  content = "af7nk-com.pages.dev"
 }
