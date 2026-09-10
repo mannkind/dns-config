@@ -32,3 +32,8 @@ variable "cloudflare_zoneid_mirandalovesdeals_com" {
   type      = string
   sensitive = true
 }
+
+variable "cloudflare_account_id" {
+  type      = string
+  sensitive = true
+}

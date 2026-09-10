@@ -1,41 +1,18 @@
+# The dyndns client owns the address; Terraform only asserts the record exists.
+# No AAAA: the client is IPv4-only, and a placeholder ::1 would publish localhost.
 resource "cloudflare_record" "thenullpointer_net_home_dyndns" {
   for_each = {
-    for i, type in ["A", "AAAA"] : type => true
+    for i, type in ["A"] : type => true
   }
   zone_id = var.cloudflare_zoneid_thenullpointer_net
   name    = "home"
   proxied = false
   type    = each.key
-  content = each.key == "A" ? "127.0.0.1" : "::1"
+  content = "127.0.0.1"
   lifecycle {
     ignore_changes = [content]
   }
 }
-
-resource "cloudflare_record" "thenullpointer_net_tunnel_refs" {
-  for_each = {
-    for i, ref in ["auth", "argocd", "calibre", "homeassistant", "llm", "miniflux", "plexrequests"] : ref => true
-  }
-  zone_id = var.cloudflare_zoneid_thenullpointer_net
-  name    = each.key
-  comment = each.key == "argocd" ? "Webhook Only" : null
-  proxied = true
-  type    = "CNAME"
-  content = "tunnel.thenullpointer.net"
-}
-
-resource "cloudflare_record" "thenullpointer_net_tunnel_dev_refs" {
-  for_each = {
-    for i, ref in ["argocd-dev"] : ref => true
-  }
-  zone_id = var.cloudflare_zoneid_thenullpointer_net
-  name    = each.key
-  comment = each.key == "argocd-dev" ? "Webhook Only" : null
-  proxied = true
-  type    = "CNAME"
-  content = "tunnel-dev.thenullpointer.net"
-}
-
 
 resource "cloudflare_record" "thenullpointer_net_caa" {
   for_each = {
@@ -63,28 +40,6 @@ resource "cloudflare_record" "thenullpointer_net_domainkey" {
   proxied = false
   type    = "CNAME"
   content = "${each.key}.thenullpointer.net.dkim.fmhosted.com"
-}
-
-resource "cloudflare_record" "thenullpointer_net_tunnel" {
-  zone_id = var.cloudflare_zoneid_thenullpointer_net
-  name    = "tunnel"
-  proxied = true
-  type    = "CNAME"
-  content = "placeholder.invalid"
-  lifecycle {
-    ignore_changes = [content]
-  }
-}
-
-resource "cloudflare_record" "thenullpointer_net_tunnel_dev" {
-  zone_id = var.cloudflare_zoneid_thenullpointer_net
-  name    = "tunnel-dev"
-  proxied = true
-  type    = "CNAME"
-  content = "placeholder.invalid"
-  lifecycle {
-    ignore_changes = [content]
-  }
 }
 
 resource "cloudflare_record" "thenullpointer_net_website" {

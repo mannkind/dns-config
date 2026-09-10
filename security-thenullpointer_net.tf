@@ -1,13 +1,11 @@
 locals {
   # Hostnames the tunnel fronts. Every name here gets a managed challenge and a
-  # per-IP rate ceiling. API clients cannot solve a challenge, so dropping a
-  # name from this list is the fix when one starts failing to sync.
-  thenullpointer_net_protected = [
-    "auth.thenullpointer.net",
-    "actual.thenullpointer.net",
-    "homeassistant.thenullpointer.net",
-    "vw.thenullpointer.net",
-  ]
+  # per-IP rate ceiling. API clients cannot solve a challenge, so clearing the
+  # protected flag in tunnels.tf is the fix when one starts failing to sync.
+  thenullpointer_net_protected = sort([
+    for host, cfg in local.tunnel_hostnames : host
+    if try(cfg.protected, false) && endswith(host, "thenullpointer.net")
+  ])
 
   thenullpointer_net_protected_expr = format(
     "(http.host in {%s})",
@@ -15,11 +13,26 @@ locals {
   )
 }
 
+# Cloudflare allows one custom-firewall ruleset per zone and this resource owns
+# every rule in it, so a rule missing here is a rule deleted in Cloudflare.
+import {
+  to = cloudflare_ruleset.thenullpointer_net_waf_custom
+  id = "zone/${nonsensitive(var.cloudflare_zoneid_thenullpointer_net)}/f82d4da92e05432588173b5ba28699d9"
+}
+
 resource "cloudflare_ruleset" "thenullpointer_net_waf_custom" {
   zone_id = var.cloudflare_zoneid_thenullpointer_net
   name    = "default"
   kind    = "zone"
   phase   = "http_request_firewall_custom"
+
+  # Predates Terraform. Blocks outright, so it must stay ahead of the challenge.
+  rules {
+    action      = "block"
+    expression  = "(not ip.src.country in {\"US\" \"GB\"})"
+    description = "USA & Friends"
+    enabled     = true
+  }
 
   rules {
     action      = "managed_challenge"
@@ -44,10 +57,14 @@ resource "cloudflare_ruleset" "thenullpointer_net_ratelimit" {
     ratelimit {
       # ip.src alone is Enterprise-only; every other plan must pair it with the
       # colo, which counts per datacenter rather than globally.
-      characteristics     = ["ip.src", "cf.colo.id"]
-      period              = 60
-      requests_per_period = 300
-      mitigation_timeout  = 600
+      characteristics = ["ip.src", "cf.colo.id"]
+      # The zone plan only permits a 10s window; 50/10s is the same sustained
+      # 5 req/s the original 300/60s described.
+      period              = 10
+      requests_per_period = 50
+      # The zone plan forces this to equal the period: a tripped IP is shut out
+      # for 10s, not the 10min originally written.
+      mitigation_timeout = 10
     }
   }
 }
