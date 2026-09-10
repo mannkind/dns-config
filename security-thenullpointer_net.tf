@@ -1,15 +1,25 @@
 locals {
-  # Hostnames the tunnel fronts. Every name here gets a managed challenge and a
-  # per-IP rate ceiling. API clients cannot solve a challenge, so clearing the
-  # protected flag in tunnels.tf is the fix when one starts failing to sync.
+  # Two lists from the flags in tunnels.tf, one per rule below: protected is
+  # the per-IP rate ceiling, challenge the managed challenge. API clients can't
+  # solve a challenge, so clear it in tunnels.tf when a host starts failing to sync.
   thenullpointer_net_protected = sort([
     for host, cfg in local.tunnel_hostnames : host
     if try(cfg.protected, false) && endswith(host, "thenullpointer.net")
   ])
 
+  thenullpointer_net_challenged = sort([
+    for host, cfg in local.tunnel_hostnames : host
+    if try(cfg.challenge, false) && endswith(host, "thenullpointer.net")
+  ])
+
   thenullpointer_net_protected_expr = format(
     "(http.host in {%s})",
     join(" ", formatlist("%q", local.thenullpointer_net_protected)),
+  )
+
+  thenullpointer_net_challenged_expr = format(
+    "(http.host in {%s})",
+    join(" ", formatlist("%q", local.thenullpointer_net_challenged)),
   )
 }
 
@@ -36,7 +46,7 @@ resource "cloudflare_ruleset" "thenullpointer_net_waf_custom" {
 
   rules {
     action      = "managed_challenge"
-    expression  = local.thenullpointer_net_protected_expr
+    expression  = local.thenullpointer_net_challenged_expr
     description = "Managed challenge on tunnel-fronted hostnames"
     enabled     = true
   }

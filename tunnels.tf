@@ -10,19 +10,21 @@ locals {
 
   # One list per tunnel, keyed by the name Cloudflare knows. Both the ingress
   # rules and the DNS records come from here, so the two cannot drift apart.
-  # protected = true adds the hostname to the managed challenge in
-  # security-thenullpointer_net.tf. Clients that cannot solve a challenge
-  # (miniflux, calibre, plexrequests all sync over API) must stay out.
+  # Two flags, each wired to a rule in security-thenullpointer_net.tf:
+  # protected adds the per-IP rate limit, challenge adds the managed challenge.
+  # An API client can't solve a challenge, so hosts with server-side callers
+  # (auth's OIDC back-channel; miniflux, calibre, plexrequests sync) skip it.
   tunnels = {
     "brewery-ingress" = {
-      "actual.thenullpointer.net"        = { service = local.traefik, protected = true }
+      "actual.thenullpointer.net" = { service = local.traefik, protected = true, challenge = true }
+      # OIDC provider: server-side callers can't solve a challenge, so rate-limit only.
       "auth.thenullpointer.net"          = { service = local.traefik, protected = true }
       "calibre.thenullpointer.net"       = { service = local.traefik }
-      "homeassistant.thenullpointer.net" = { service = local.traefik, protected = true }
+      "homeassistant.thenullpointer.net" = { service = local.traefik, protected = true, challenge = true }
       "miniflux.thenullpointer.net"      = { service = local.traefik }
       "plexrequests.thenullpointer.net"  = { service = local.traefik }
       "reservations.brewer.pw"           = { service = local.traefik }
-      "vw.thenullpointer.net"            = { service = local.traefik, protected = true }
+      "vw.thenullpointer.net"            = { service = local.traefik, protected = true, challenge = true }
       "welcomemat.thenullpointer.net"    = { service = local.traefik }
     }
 
