@@ -48,7 +48,8 @@ resource "cloudflare_ruleset" "thenullpointer_net_waf_custom" {
     action      = "managed_challenge"
     expression  = local.thenullpointer_net_challenged_expr
     description = "Managed challenge on tunnel-fronted hostnames"
-    enabled     = true
+    # Off 2026-09-10: actual and other API/sync clients can't solve it. Revisit.
+    enabled = false
   }
 }
 
