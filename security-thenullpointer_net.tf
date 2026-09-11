@@ -21,6 +21,15 @@ locals {
     "(http.host in {%s})",
     join(" ", formatlist("%q", local.thenullpointer_net_challenged)),
   )
+
+  # Hosting ASNs: AWS, GCP, Azure, DigitalOcean, OVH, Hetzner, Vultr, Linode. Starter list.
+  thenullpointer_net_datacenter_asns = [16509, 14618, 15169, 8075, 14061, 16276, 24940, 20473, 63949]
+
+  # Challenge only suspicious sources: high threat score or a datacenter ASN.
+  thenullpointer_net_challenge_suspect_expr = format(
+    "(cf.threat_score gt 10 or ip.src.asnum in {%s})",
+    join(" ", [for a in local.thenullpointer_net_datacenter_asns : tostring(a)]),
+  )
 }
 
 # Cloudflare allows one custom-firewall ruleset per zone and this resource owns
@@ -39,17 +48,16 @@ resource "cloudflare_ruleset" "thenullpointer_net_waf_custom" {
   # Predates Terraform. Blocks outright, so it must stay ahead of the challenge.
   rules {
     action      = "block"
-    expression  = "(not ip.src.country in {\"US\" \"GB\"})"
+    expression  = "(not ip.src.country in {\"US\" \"GB\" \"CA\"})"
     description = "USA & Friends"
     enabled     = true
   }
 
   rules {
     action      = "managed_challenge"
-    expression  = local.thenullpointer_net_challenged_expr
-    description = "Managed challenge on tunnel-fronted hostnames"
-    # Off 2026-09-10: actual and other API/sync clients can't solve it. Revisit.
-    enabled = false
+    expression  = "${local.thenullpointer_net_challenged_expr} and ${local.thenullpointer_net_challenge_suspect_expr}"
+    description = "Challenge suspicious traffic to tunnel-fronted hostnames"
+    enabled     = true
   }
 }
 
